@@ -84,7 +84,7 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
 
       const timeValues: number[] = timeField.values.toArray();
       const wktValues: string[] = wktField.values.toArray();
-      const wkts: { wkt: string, properties: {} }[] = [];
+      const features: { wkt: string, properties: {} }[] = [];
       for (let i = 0; i < series.length; i++) {
         if (timeValues[i] !== actualTimeValue) {
           continue;
@@ -96,9 +96,9 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
           const value = propertyValues[field.name][i];
           properties[field.name] = value;
         }
-        wkts.push({ wkt: wktValues[i], properties });
+        features.push({ wkt: wktValues[i], properties });
       }
-      return wkts;
+      return features;
     },
     [actualTimeValue, data]
   );
