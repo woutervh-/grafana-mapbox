@@ -76,7 +76,7 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
         return;
       }
 
-      const propertyFields = series.fields;
+      const propertyFields = series.fields.filter((field) => field.name !== options['time-column-name'] && field.name !== options['wkt-column-name']);
       const propertyValues: { [Key: string]: any[] } = {};
       for (const field of propertyFields) {
         propertyValues[field.name] = field.values.toArray();
@@ -90,6 +90,8 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
           continue;
         }
         const properties: { [Key: string]: any } = {};
+        properties[options['time-column-name']] = dateTime(timeValues[i]).format();
+        properties[options['wkt-column-name']] = wktValues[i];
         for (const field of propertyFields) {
           const value = propertyValues[field.name][i];
           properties[field.name] = value;
