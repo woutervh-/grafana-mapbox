@@ -1,0 +1,32 @@
+{
+  "name": "woutervh-grafana-mapbox",
+  "version": "1.0.0",
+  "description": "Grafana panel that displays mapbox-gl.",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "repository": "github:woutervh-/grafana-mapbox",
+  "author": "Wouter van Heeswijk",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/woutervh-/grafana-mapbox/issues",
+    "email": "plugins@grafana.com"
+  },
+  "devDependencies": {
+    "@grafana/data": "^7.0.0",
+    "@grafana/toolkit": "^7.0.0",
+    "@grafana/ui": "^7.0.0",
+    "@types/mapbox-gl": "^1.12.5",
+    "emotion": "10.0.27"
+  },
+  "engines": {
+    "node": ">=12 <13"
+  },
+  "dependencies": {
+    "mapbox-gl": "^1.12.0",
+    "wkx": "^0.5.0"
+  }
+}

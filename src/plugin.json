@@ -1,0 +1,38 @@
+{
+  "type": "panel",
+  "name": "mapbox-gl-panel",
+  "id": "woutervh-mapbox-gl-panel",
+  "info": {
+    "description": "Grafana panel that displays mapbox-gl.",
+    "author": {
+      "name": "Wouter van Heeswijk",
+      "url": "https://github.com/woutervh-/"
+    },
+    "keywords": [
+      "mapbox",
+      "mapbox-gl",
+      "panel"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/simple-react-panel"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/simple-react-panel/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaVersion": "7.0.x",
+    "plugins": []
+  }
+}
