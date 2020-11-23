@@ -5,7 +5,7 @@ import { css, cx } from 'emotion';
 import { Label, stylesFactory, useTheme } from '@grafana/ui';
 import { MapComponent } from './map/map-component';
 import { TimeSlider } from './TimeSlider';
-import wkx from 'wkx';
+import * as hooks from './hooks';
 import { Popup } from './map/mapbox/popup';
 
 let popupKey = 0;
@@ -27,81 +27,10 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
   const [mapInstance, setMapInstance] = React.useState<mapboxgl.Map | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
 
-  const availableTimeValues = React.useMemo(
-    () => {
-      if (data.series.length <= 0) {
-        return;
-      }
-      const series = data.series[0];
-      const timeField = series.fields.find((field) => field.name === options['time-column-name']);
-      if (!timeField) {
-        return;
-      }
-      const times = new Set<number>();
-      const timeValues = timeField.values.toArray();
-      for (const timeValue of timeValues) {
-        times.add(timeValue);
-      }
-      return Array.from(times);
-    },
-    [options, data]
-  );
+  const availableTimeValues = hooks.useAvailableTimeValues(options, data);
+  const effectiveTimeValue = hooks.useEffectiveTimeValue(data, availableTimeValues, selectedTimeValue);
 
-  const actualTimeValue = React.useMemo(
-    () => {
-      if (data.series.length <= 0) {
-        return;
-      }
-      if (!availableTimeValues) {
-        return;
-      }
-      if (selectedTimeValue && availableTimeValues.includes(selectedTimeValue)) {
-        return selectedTimeValue;
-      } else {
-        return availableTimeValues[0];
-      }
-    },
-    [data, availableTimeValues, selectedTimeValue]
-  );
-
-  const selectedFeatures = React.useMemo(
-    () => {
-      if (data.series.length <= 0) {
-        return;
-      }
-      const series = data.series[0];
-      const timeField = series.fields.find((field) => field.name === options['time-column-name']);
-      const wktField = series.fields.find((field) => field.name === options['wkt-column-name']);
-      if (!timeField || !wktField) {
-        return;
-      }
-
-      const propertyFields = series.fields.filter((field) => field.name !== options['time-column-name'] && field.name !== options['wkt-column-name']);
-      const propertyValues: { [Key: string]: any[] } = {};
-      for (const field of propertyFields) {
-        propertyValues[field.name] = field.values.toArray();
-      }
-
-      const timeValues: number[] = timeField.values.toArray();
-      const wktValues: string[] = wktField.values.toArray();
-      const features: { wkt: string, properties: {} }[] = [];
-      for (let i = 0; i < series.length; i++) {
-        if (timeValues[i] !== actualTimeValue) {
-          continue;
-        }
-        const properties: { [Key: string]: any } = {};
-        properties[options['time-column-name']] = dateTime(timeValues[i]).format();
-        properties[options['wkt-column-name']] = wktValues[i];
-        for (const field of propertyFields) {
-          const value = propertyValues[field.name][i];
-          properties[field.name] = value;
-        }
-        features.push({ wkt: wktValues[i], properties });
-      }
-      return features;
-    },
-    [actualTimeValue, data]
-  );
+  const selectedFeatures = hooks.useSelectedFeatures(options, data, effectiveTimeValue);
 
   const mapboxData = React.useMemo(
     () => {
@@ -113,14 +42,7 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
         tolerance: 0,
         data: {
           type: 'FeatureCollection',
-          features: selectedFeatures.map((feature) => {
-            const geometry = wkx.Geometry.parse(feature.wkt).toGeoJSON() as GeoJSON.Geometry;
-            return {
-              type: 'Feature',
-              geometry: geometry,
-              properties: feature.properties
-            };
-          })
+          features: selectedFeatures
         }
       };
       const layers: mapboxgl.Layer[] = [];
@@ -234,7 +156,7 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
     >
       <MapComponent width={width} height={height - 67} styleUrl={options['style-url']} onMapReference={setMapInstance} />
       <TimeSlider min={data.timeRange.from} max={data.timeRange.to} timeValues={availableTimeValues} onChange={setSelectedTimeValue} />
-      <Label>{dateTime(actualTimeValue).fromNow()}</Label>
+      <Label>{dateTime(effectiveTimeValue).fromNow()}</Label>
       {
         popupInfo
           ? <Popup key={popupInfo.key} map={popupInfo.map} lngLat={popupInfo.lngLat} className={styles.popup}>
