@@ -1,22 +1,31 @@
-# Grafana Panel Plugin Template
+# Mapbox Panel plugin
 
-<!-- 
-[![CircleCI](https://circleci.com/gh/grafana/simple-react-panel.svg?style=svg)](https://circleci.com/gh/grafana/simple-react-panel)
-[![David Dependency Status](https://david-dm.org/grafana/simple-react-panel.svg)](https://david-dm.org/grafana/simple-react-panel)
-[![David Dev Dependency Status](https://david-dm.org/grafana/simple-react-panel/dev-status.svg)](https://david-dm.org/grafana/simple-react-panel/?type=dev)
-[![Known Vulnerabilities](https://snyk.io/test/github/grafana/simple-react-panel/badge.svg)](https://snyk.io/test/github/grafana/simple-react-panel)
-[![Maintainability](https://api.codeclimate.com/v1/badges/1dee2585eb412f913cbb/maintainability)](https://codeclimate.com/github/grafana/simple-react-panel/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/1dee2585eb412f913cbb/test_coverage)](https://codeclimate.com/github/grafana/simple-react-panel/test_coverage) -->
+## Introduction
 
-This template is a starting point for building Grafana Panel Plugins in Grafana 7.0+
+Let's consider a time-series with geospatial data, for example:
 
+| datetime            | latitude | longitude |
+|---------------------|----------|-----------|
+| 2020-11-23 13:27:02 | 52.375   | 4.89865   |
+| 2020-11-23 13:27:02 | 52.3725  | 4.90977   |
+| 2020-11-23 13:27:02 | 52.3193  | 5.13439   |
+| 2020-11-23 13:27:02 | 52.4427  | 5.54845   |
+| 2020-11-23 13:27:02 | 50.7302  | 2.4198    |
+| 2020-11-23 15:12:49 | 47.0571  | 15.4308   |
+| 2020-11-23 15:12:49 | 47.1479  | 15.7725   |
+| 2020-11-23 15:12:49 | 46.7176  | 15.6473   |
+| 2020-11-23 15:12:49 | 47.2397  | 18.8275   |
 
-## What is Grafana Panel Plugin?
-Panels are the building blocks of Grafana. They allow you to visualize data in different ways. While Grafana has several types of panels already built-in, you can also build your own panel, to add support for other visualizations.
+Querying this data from Grafana together with this plugin will allow you to dynamically display parts of this data on a Mapbox map:
 
-For more information about panels, refer to the documentation on [Panels](https://grafana.com/docs/grafana/latest/features/panels/panels/)
+![Demo](docs/demo.gif)
 
-## Getting started
+## Future ideas
+
+- Custom styling.
+- Mapbox Studio API key + style integration.
+
+## Development
 1. Install dependencies
 ```BASH
 yarn install

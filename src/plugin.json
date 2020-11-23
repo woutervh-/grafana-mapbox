@@ -1,9 +1,9 @@
 {
   "type": "panel",
-  "name": "mapbox-gl-panel",
-  "id": "woutervh-mapbox-gl-panel",
+  "name": "mapbox-panel",
+  "id": "woutervh-mapbox-panel",
   "info": {
-    "description": "Grafana panel that displays mapbox-gl.",
+    "description": "Grafana panel that displays spatial data on mapbox-gl.",
     "author": {
       "name": "Wouter van Heeswijk",
       "url": "https://github.com/woutervh-/"
