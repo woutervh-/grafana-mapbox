@@ -113,9 +113,14 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
       }
       <Label>
         {
+          options['time-option'] === 'time-range'
+            ? 'Time range: '
+            : 'Snapshot time: '
+        }
+        {
           effectiveTimeValue
             ? effectiveTimeValue.map((t) => dateTime(t).fromNow()).join(' - ')
-            : null
+            : 'unselected'
         }
       </Label>
       {
