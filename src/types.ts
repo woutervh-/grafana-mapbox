@@ -7,4 +7,5 @@ export interface MapboxPanelOptions {
   'longitude-column-name': string;
   'show-circles': boolean;
   'show-lines': boolean;
+  'time-option': string;
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { DataFrame, dateTime, PanelData } from '@grafana/data';
 import { MapboxPanelOptions } from 'types';
 import wkx from 'wkx';
+import * as constants from './constants';
 
 export const useAvailableTimeValues = (options: MapboxPanelOptions, data: PanelData) => {
   return React.useMemo(
@@ -25,22 +26,32 @@ export const useAvailableTimeValues = (options: MapboxPanelOptions, data: PanelD
   );
 };
 
-export const useEffectiveTimeValue = (data: PanelData, availableTimeValues: number[] | undefined, selectedTimeValue: number | null) => {
+export const useEffectiveTimeValue = (options: MapboxPanelOptions, data: PanelData, availableTimeValues: number[] | undefined, selectedSnapshotTime: number[] | null, selectedTimeRange: number[] | null) => {
   return React.useMemo(
-    () => {
-      if (data.series.length <= 0) {
-        return;
-      }
-      if (!availableTimeValues) {
-        return;
-      }
-      if (selectedTimeValue && availableTimeValues.includes(selectedTimeValue)) {
-        return selectedTimeValue;
+    (): number[] | undefined => {
+      if (options['time-option'] === 'snapshots') {
+        if (data.series.length <= 0) {
+          return;
+        }
+        if (!availableTimeValues) {
+          return;
+        }
+        if (selectedSnapshotTime && availableTimeValues.includes(selectedSnapshotTime[0])) {
+          return selectedSnapshotTime;
+        } else {
+          return [availableTimeValues[0]];
+        }
+      } else if (options['time-option'] === 'time-range') {
+        if (selectedTimeRange && data.timeRange.from.valueOf() <= selectedTimeRange[0] && selectedTimeRange[1] <= data.timeRange.to.valueOf()) {
+          return selectedTimeRange;
+        } else {
+          return [data.timeRange.from.valueOf(), data.timeRange.to.valueOf()];
+        }
       } else {
-        return availableTimeValues[0];
+        return;
       }
     },
-    [data, availableTimeValues, selectedTimeValue]
+    [options, data, availableTimeValues, selectedSnapshotTime, selectedTimeRange]
   );
 };
 
@@ -86,10 +97,10 @@ export const useGeoCoordinateGeometries = (options: MapboxPanelOptions, series: 
   return geometries;
 };
 
-export const useSelectedFeatures = (options: MapboxPanelOptions, data: PanelData, effectiveTimeValue: number | undefined) => {
+export const useSelectedFeatures = (options: MapboxPanelOptions, data: PanelData, effectiveTimeValue: number[] | undefined) => {
   return React.useMemo(
     () => {
-      if (data.series.length <= 0) {
+      if (data.series.length <= 0 || !effectiveTimeValue) {
         return;
       }
       const series = data.series[0];
@@ -99,9 +110,13 @@ export const useSelectedFeatures = (options: MapboxPanelOptions, data: PanelData
       }
       const timeValues = timeField.values.toArray();
 
-      const indexFilter = (index: number) => {
-        return timeValues[index] === effectiveTimeValue;
-      };
+      const indexFilter = effectiveTimeValue.length === 1
+        ? (index: number) => {
+          return timeValues[index] === effectiveTimeValue[0];
+        }
+        : (index: number) => {
+          return effectiveTimeValue[0] <= timeValues[index] && timeValues[index] <= effectiveTimeValue[1];
+        };
 
       let geometries: GeoJSON.Geometry[] | undefined = undefined;
       switch (options.selection) {
@@ -144,5 +159,58 @@ export const useSelectedFeatures = (options: MapboxPanelOptions, data: PanelData
       return features;
     },
     [effectiveTimeValue, data]
+  );
+};
+
+export const useMapboxData = (options: MapboxPanelOptions, selectedFeatures: GeoJSON.Feature[] | undefined) => {
+  return React.useMemo(
+    () => {
+      if (!selectedFeatures) {
+        return;
+      }
+      const source: mapboxgl.GeoJSONSourceRaw = {
+        type: 'geojson',
+        tolerance: 0,
+        data: {
+          type: 'FeatureCollection',
+          features: selectedFeatures
+        }
+      };
+      const layers: mapboxgl.Layer[] = [];
+      if (options['show-lines']) {
+        layers.push({
+          id: constants.lineLayerId,
+          source: constants.dataSourceId,
+          type: 'line',
+          minzoom: 0,
+          maxzoom: 24,
+          metadata: {
+            'app:clickable': true
+          },
+          paint: {
+            'line-width': 3,
+            'line-color': 'red'
+          }
+        });
+      }
+      if (options['show-circles']) {
+        layers.push({
+          id: constants.circleLayerId,
+          source: constants.dataSourceId,
+          type: 'circle',
+          minzoom: 0,
+          maxzoom: 24,
+          metadata: {
+            'app:clickable': true
+          },
+          paint: {
+            'circle-radius': 3,
+            'circle-color': 'red'
+          }
+        });
+      }
+      return { source, layers };
+    },
+    [selectedFeatures, options]
   );
 };

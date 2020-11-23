@@ -7,6 +7,7 @@ import { MapComponent } from './map/map-component';
 import { TimeSlider } from './TimeSlider';
 import * as hooks from './hooks';
 import { Popup } from './map/mapbox/popup';
+import * as constants from './constants';
 
 let popupKey = 0;
 
@@ -23,65 +24,15 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
   const theme = useTheme();
   const styles = getStyles(theme);
 
-  const [selectedTimeValue, setSelectedTimeValue] = React.useState<number | null>(null);
+  const [selectedSnapshotTime, setSelectedSnapshotTime] = React.useState<number[] | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] = React.useState<number[] | null>(null);
   const [mapInstance, setMapInstance] = React.useState<mapboxgl.Map | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
 
   const availableTimeValues = hooks.useAvailableTimeValues(options, data);
-  const effectiveTimeValue = hooks.useEffectiveTimeValue(data, availableTimeValues, selectedTimeValue);
-
+  const effectiveTimeValue = hooks.useEffectiveTimeValue(options, data, availableTimeValues, selectedSnapshotTime, selectedTimeRange);
   const selectedFeatures = hooks.useSelectedFeatures(options, data, effectiveTimeValue);
-
-  const mapboxData = React.useMemo(
-    () => {
-      if (!selectedFeatures) {
-        return;
-      }
-      const source: mapboxgl.GeoJSONSourceRaw = {
-        type: 'geojson',
-        tolerance: 0,
-        data: {
-          type: 'FeatureCollection',
-          features: selectedFeatures
-        }
-      };
-      const layers: mapboxgl.Layer[] = [];
-      if (options['show-lines']) {
-        layers.push({
-          id: 'wkt-data-line',
-          source: 'wkt-data',
-          type: 'line',
-          minzoom: 0,
-          maxzoom: 24,
-          metadata: {
-            'app:clickable': true
-          },
-          paint: {
-            'line-width': 3,
-            'line-color': 'red'
-          }
-        });
-      }
-      if (options['show-circles']) {
-        layers.push({
-          id: 'wkt-data-circle',
-          source: 'wkt-data',
-          type: 'circle',
-          minzoom: 0,
-          maxzoom: 24,
-          metadata: {
-            'app:clickable': true
-          },
-          paint: {
-            'circle-radius': 3,
-            'circle-color': 'red'
-          }
-        });
-      }
-      return { source, layers };
-    },
-    [selectedFeatures, options]
-  );
+  const mapboxData = hooks.useMapboxData(options, selectedFeatures);
 
   const handleMouseEnter = React.useCallback(
     (event: mapboxgl.MapLayerMouseEvent) => {
@@ -116,16 +67,16 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
       try {
         const layers = mapInstance.getStyle().layers;
         if (layers) {
-          if (layers.find((layer) => layer.id === 'wkt-data-line')) {
-            mapInstance.removeLayer('wkt-data-line');
+          if (layers.find((layer) => layer.id === constants.lineLayerId)) {
+            mapInstance.removeLayer(constants.lineLayerId);
           }
-          if (layers.find((layer) => layer.id === 'wkt-data-circle')) {
-            mapInstance.removeLayer('wkt-data-circle');
+          if (layers.find((layer) => layer.id === constants.circleLayerId)) {
+            mapInstance.removeLayer(constants.circleLayerId);
           }
         }
         const sources = mapInstance.getStyle().sources;
-        if (sources && 'wkt-data' in sources) {
-          mapInstance.removeSource('wkt-data');
+        if (sources && constants.dataSourceId in sources) {
+          mapInstance.removeSource(constants.dataSourceId);
         }
       } catch {
         // Ignore.
@@ -133,7 +84,7 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
       if (!mapboxData) {
         return;
       }
-      mapInstance.addSource('wkt-data', mapboxData.source);
+      mapInstance.addSource(constants.dataSourceId, mapboxData.source);
       for (const layer of mapboxData.layers) {
         mapInstance.addLayer(layer);
         mapInstance.on('mouseenter', layer.id, handleMouseEnter);
@@ -155,8 +106,18 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
       )}
     >
       <MapComponent width={width} height={height - 67} styleUrl={options['style-url']} onMapReference={setMapInstance} />
-      <TimeSlider min={data.timeRange.from} max={data.timeRange.to} timeValues={availableTimeValues} onChange={setSelectedTimeValue} />
-      <Label>{dateTime(effectiveTimeValue).fromNow()}</Label>
+      {
+        options['time-option'] === 'time-range'
+          ? <TimeSlider min={data.timeRange.from} max={data.timeRange.to} mode="range" onChange={setSelectedTimeRange} />
+          : <TimeSlider min={data.timeRange.from} max={data.timeRange.to} mode="snapshot" onChange={setSelectedSnapshotTime} timeValues={availableTimeValues} />
+      }
+      <Label>
+        {
+          effectiveTimeValue
+            ? effectiveTimeValue.map((t) => dateTime(t).fromNow()).join(' - ')
+            : null
+        }
+      </Label>
       {
         popupInfo
           ? <Popup key={popupInfo.key} map={popupInfo.map} lngLat={popupInfo.lngLat} className={styles.popup}>
