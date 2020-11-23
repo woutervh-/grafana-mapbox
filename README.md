@@ -18,7 +18,7 @@ Let's consider a time-series with geospatial data, for example:
 
 Querying this data from Grafana together with this plugin will allow you to dynamically display parts of this data on a Mapbox map:
 
-![Demo](docs/demo.gif)
+![Demo](https://github.com/woutervh-/grafana-mapbox/raw/master/docs/demo.gif)
 
 ## Future ideas
 
