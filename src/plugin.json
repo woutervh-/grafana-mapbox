@@ -27,7 +27,12 @@
         "url": "https://github.com/grafana/simple-react-panel/blob/master/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Screenshot",
+        "path": "img/screenshot1.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
